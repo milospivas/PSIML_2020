@@ -1,5 +1,9 @@
 """
-    Task C - WORLD MAP
+    Task D - WORLD MAP
+    
+    Given a "large" image and a set of smaller patches (of constant dimensions)
+    find x,y coordinates of each smaller patch in the large image.
+    Patches can be exact copies or filtered in some way.
 """
 
 from PIL import Image

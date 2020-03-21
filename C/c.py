@@ -1,27 +1,13 @@
 """
     Task C - LABELING
 
-    TODO list:
-        - REREAD THE WHOLE TASK THOROUGHLY
-        - parse jsons
-            - convert the dictionary entries into 4 2D numpy arrays with axes:
-                0 - frame_index, 1 - identity
-                    bboxes_x[][]
-                    bboxes_y[][]
-
-                    joints_x[][]
-                    joints_y[][]
-        - for b in bboxes_identities:
-            cc = 0
-            for j in joints_identities:
-                cc = calculate cross-correlations between bboxes_[:][b] and joints_[:][j]
-                if cc > max_cc:
-                    max_cc = cc
-                    joint_bbox_map[j] = b
-        
-        for j, b in joint_bbox_map.items():
-            print(str(j)+":"+str(b))
-
+    A video contains moving humans.
+    In each frame, humans are recognised and labeled via two SEPARATE ways:
+        1. bounding boxes
+        2. neck joints
+    The task is to merge the labels of bounding boxes and neck joints i.e.
+    map each neck joint to corresponding bounding box.
+    The data is contained in .json files.
 """
 
 import json

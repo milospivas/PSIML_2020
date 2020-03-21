@@ -1,5 +1,13 @@
 """
     Task C - LABELING
+
+    A video contains moving humans.
+    In each frame, humans are recognised and labeled via two SEPARATE ways:
+        1. bounding boxes
+        2. neck joints
+    The task is to merge the labels of bounding boxes and neck joints i.e.
+    map each neck joint to corresponding bounding box.
+    The data is contained in .json files.
 """
 
 import json

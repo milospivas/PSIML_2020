@@ -83,259 +83,6 @@ def wmap_preprocess(wmap : np.array, H : int, W : int, h : int, w : int, bin_cnt
 
     return wmap_flats, sigmas
 
-    # hists = np.empty((m, n, bin_cnt))
-
-    # print("Slow wmap histograms")
-    # for y in range(m):
-    #     # print("y = ", y)
-    #     for x in range(n):
-    #         curr_hist, _ = np.histogram(wmap[y : y+h, x : x+w], bins=bin_cnt)
-    #         hists[y, x, :] = curr_hist
-    
-    # return hists
-
-
-    # def my_histogram(X, shrink_order = 1):
-    #     d_factor = 2**shrink_order
-    #     bins = 256 // d_factor
-    #     hist = np.zeros(bins)
-
-    #     Y = X // d_factor
-    #     H = len(Y)
-    #     W = len(Y[0])
-    #     for x in range(W):
-    #         for y in range(H):
-    #             hist[Y[y, x]] += 1
-        
-    #     return hist
-
-    # def wmap_preprocess_fast(wmap : np.array, H : int, W : int, h : int, w : int, bin_cnt : int = 128) -> np.array:
-    #     'Preprocess the world map. Calculate and return histograms for every subpatch.'
-    #     m = H - h + 1
-    #     n = W - w + 1
-
-    #     hists = np.zeros((m, n, bin_cnt))
-
-    #     print("Fast wmap histograms:")
-
-    #     y = 0
-    #     x = 0
-    #     # hists[y, x, :], _ = np.histogram(wmap[y : y+h, x : x+w], bins=bin_cnt)
-    #     hists[y, x, :] = my_histogram(wmap[y : y+h, x : x+w])
-
-    #     for y in range(1,m):
-    #         x = 0
-    #         dhist_u = my_histogram(wmap[y-1 : y, x : x+w])
-    #         dhist_d = my_histogram(wmap[y+h-1 : y+h, x : x+w])
-    #         hists[y, x, :] = hists[y-1, x, :] + dhist_d - dhist_u
-        
-    #     for y in range(m):
-    #         print("y = ", y)
-    #         for x in range(1, n):
-
-    #             # dhist_l, _ = np.histogram(wmap[y : y+h, x-1 : x], bins=bin_cnt)
-    #             # dhist_r, _ = np.histogram(wmap[y : y+h, x+w-1 : x+w], bins=bin_cnt)
-    #             dhist_l = my_histogram(wmap[y : y+h, x-1 : x])
-    #             dhist_r = my_histogram(wmap[y : y+h, x+w-1 : x+w])
-    #             hists[y, x, :] = hists[y, x-1, :] + dhist_r - dhist_l
-        
-    #     return hists
-
-def patch_preprocess(patch : np.array, h : int, w : int, bin_cnt : int = 128) -> (np.array, np.array, np.array, np.array):
-    'Subdivide the patch into 4 quadrants and calcualte histograms.'
-    h_sub = h//2
-    w_sub = w//2
-    q00_hist, _ = np.histogram(patch[:h_sub, :w_sub], bins = bin_cnt)
-    q01_hist, _ = np.histogram(patch[:h_sub, w_sub:], bins = bin_cnt)
-    q10_hist, _ = np.histogram(patch[h_sub:, :w_sub], bins = bin_cnt)
-    q11_hist, _ = np.histogram(patch[h_sub:, w_sub:], bins = bin_cnt)
-
-    return q00_hist, q01_hist, q10_hist, q11_hist
-
-def corrcoef(x_array, y_array, x_std, y_std):
-    if (x_std == 0) and (y_std == 0):
-        R = 1
-    elif ((x_std == 0) and (y_std != 0)) or ((x_std != 0) and (y_std == 0)):
-        R = -1
-    else:
-        R = np.corrcoef(x_array, y_array)[0,1]
-    
-    return R
-
-def corrcoefs2d(X, Y):
-    H = len(X)
-    W = len(X[0])
-
-    h = len(Y)
-    w = len(Y[0])
-
-    m = H - h + 1
-    n = W - w + 1
-
-    xcorr = np.empty((m, n))
-
-    y_array = Y.ravel()
-    y_std = np.std(y_array)
-    # y00 = Y[ :h//2  , :w//2 ].ravel()
-    # y01 = Y[ :h//2  ,  w//2:].ravel()
-    # y10 = Y[  h//2: , :w//2 ].ravel()
-    # y11 = Y[  h//2: ,  w//2:].ravel()
-    # y00_std = np.std(y00)
-    # y01_std = np.std(y01)    
-    # y10_std = np.std(y10)
-    # y11_std = np.std(y11)
-
-    for y in range(m):
-        for x in range(n):
-            x_array = X[y:y+h, x:x+w].ravel()
-            x_std = np.std(x_array)
-
-            # x00 = X[ y        : y + h//2 , x        : x + w//2 ].ravel()
-            # x01 = X[ y        : y + h//2 , x + w//2 : x + w    ].ravel()
-            # x10 = X[ y + h//2 : y + h    , x        : x + w//2 ].ravel()
-            # x11 = X[ y + h//2 : y + h    , x + w//2 : x + w    ].ravel()
-
-            # x00_std = np.std(x00)
-            # x01_std = np.std(x01)
-            # x10_std = np.std(x10)
-            # x11_std = np.std(x11)
-            # A = corrcoef(x00, y00, x00_std, y00_std)
-            # B = corrcoef(x01, y01, x01_std, y01_std)
-            # C = corrcoef(x10, y10, x10_std, y10_std)
-            # D = corrcoef(x11, y11, x11_std, y11_std)
-            
-            # # normalizing to [0, 1]
-            # A = (A + 1)/2
-            # B = (B + 1)/2
-            # C = (C + 1)/2
-            # D = (D + 1)/2
-
-            # # unifying
-            # R = 0
-            # if (A + B + C + D) != 0:
-            #     R = 4 * A * B * C * D / (A + B + C + D)
-            
-            xcorr[y,x] = corrcoef(x_array, y_array, x_std, y_std)
-
-    return xcorr
-
-
-def draw_wp_hists(x_hist, y_hist, bin_centers, xy_xcorr = None):
-    x_max_f = x_hist.argmax()
-    y_max_f = y_hist.argmax()
-
-    plt.figure()
-    plt.plot(bin_centers, x_hist)
-    plt.title("WMAP patch histogram, max at bin: " + str(x_max_f))
-
-    plt.figure()
-    plt.plot(bin_centers, y_hist)
-    plt.title("Search patch histogram, max at bin: " + str(y_max_f))
-    
-    if xy_xcorr is not None:
-        s = int(bin_centers[0])
-        n = len(xy_xcorr)
-        plt.figure()
-        plt.plot(range(s, s+n), xy_xcorr)
-        plt.title("Cross-correlation of two histograms")
-
-    plt.show()
-
-def sliding_corrcoef(x : np.array, y : np.array, s : int) -> float:
-    max_R = np.corrcoef(x,y)[0,1]
-    if abs(x.argmax() - y.argmax()) <= s:
-        for i in range(1,s//2):
-            R = np.corrcoef(y[i:], x[:-i])[0,1]
-            if R > max_R:
-                max_R = R
-        for i in range(1,s//2):
-            R = np.corrcoef(x[i:], y[:-i])[0,1]
-            if R > max_R:
-                max_R = R
-    
-    return max_R
-
-def corrcoef_hists( y : int, x : int, h : int, w : int,
-                    wmap_hists : np.array,
-                    q00_hist : np.array,
-                    q01_hist : np.array,
-                    q10_hist : np.array,
-                    q11_hist : np.array
-                    ) -> float:
-    h = h//2
-    w = w//2
-    # calculating correlation coeficients
-    A = sliding_corrcoef(wmap_hists[y    , x    ], q00_hist, 16)
-    B = sliding_corrcoef(wmap_hists[y    , x + w], q01_hist, 16)
-    C = sliding_corrcoef(wmap_hists[y + h, x    ], q10_hist, 16)
-    D = sliding_corrcoef(wmap_hists[y + h, x + w], q11_hist, 16)
-    
-    # normalizing to [0, 1]
-    A = (A + 1)/2
-    B = (B + 1)/2
-    C = (C + 1)/2
-    D = (D + 1)/2
-
-    # unifying
-    R = 0
-    if (A + B + C + D) != 0:
-        R = 4 * A * B * C * D / (A + B + C + D)
-    
-    return R
-
-def compare(wmap, y, x, h, w, search_patch, draw_flag = False):
-    bin_cnt = 128
-    
-    wmap_patch = wmap[y : y+h, x : x+w]
-
-    # wmap_patch = abs(fftpack.fft2(wmap_patch))
-    # patch = abs(fftpack.fft2(search_patch))
-    patch = search_patch
-
-
-    wmap_hist, wmap_bin_edges = np.histogram(wmap_patch, bins=bin_cnt)
-    wmap_bin_centers = 0.5 * (wmap_bin_edges[:-1] + wmap_bin_edges[1:])
-
-    patch_hist, patch_bin_edges = np.histogram(patch, bins=bin_cnt)
-    # patch_bin_centers = 0.5 * (patch_bin_edges[:-1] + patch_bin_edges[1:])
-
-    hist_xcorr = np.correlate(wmap_hist, patch_hist, 'full')
-
-    # Rxy = np.corrcoef(wmap_hist, patch_hist)
-    # R = Rxy[0,1]
-    R = sliding_corrcoef(wmap_hist, patch_hist, 16)
-    print("Histogram correlation coefficient:", R)
-
-    # xcorr = signal.correlate2d(wmap_patch, patch)
-    # conv = signal.fftconvolve(wmap_patch, patch)
-    # diff = np.square(wmap_patch - patch)
-
-    if R < 0.8 and draw_flag:
-    # if draw_flag:
-        fig = plt.figure()
-        plt.imshow(wmap_patch, cmap="gray")
-        plt.title("WMAP patch")
-
-        fig = plt.figure()
-        plt.imshow(patch, cmap="gray")
-        plt.title("search patch")
-
-        # fig = plt.figure()
-        # plt.imshow(xcorr, cmap="gray")
-        # plt.title("XCorr")
-
-        # fig = plt.figure()
-        # plt.imshow(conv, cmap="gray")
-        # plt.title("Convolution")
-
-        # fig = plt.figure()
-        # plt.imshow(diff, cmap="gray")
-        # plt.title("Square difference")
-
-        draw_wp_hists(wmap_hist, patch_hist, wmap_bin_centers, hist_xcorr)
-    pass
-
-
 inputs = [
             "D/public/inputs/0.txt"
             ,"D/public/inputs/1.txt"
@@ -406,14 +153,10 @@ for i_in, in_path in enumerate(inputs[start:stop]):
     # flattening and normalizing
     wmap_flats, wmap_sigmas = wmap_preprocess(wmap_d, H_d, W_d, h_d, w_d)
     
-    # bounds for patch search
-    # m = H - h + 1
-    # n = W - w + 1
-
     m_d = H_d - h_d + 1
     n_d = W_d - w_d + 1
 
-    # R = np.zeros((m_d, n_d))
+    R = np.zeros((m_d, n_d))
 
     start = 0
     for p_it, patch_path in enumerate(patches_paths[start:]):
@@ -432,13 +175,13 @@ for i_in, in_path in enumerate(inputs[start:stop]):
         patch_d = np.array(patch_file_g_d)
 
         # plotting
-        plt.figure()
-        plt.imshow(patch, cmap='gray')
-        plt.title("OG search patch")
+        # plt.figure()
+        # plt.imshow(patch, cmap='gray')
+        # plt.title("OG search patch")
 
-        plt.figure()
-        plt.imshow(patch_d, cmap='gray')
-        plt.title("Downscaled search patch")
+        # plt.figure()
+        # plt.imshow(patch_d, cmap='gray')
+        # plt.title("Downscaled search patch")
 
 
         # patch normalization
@@ -450,50 +193,31 @@ for i_in, in_path in enumerate(inputs[start:stop]):
             patch_d[:,:] = 0
 
         # plotting after normalization
-        plt.figure()
-        plt.imshow(patch_d, cmap='gray')
-        plt.title("Downscaled and normalized search patch")
+        # plt.figure()
+        # plt.imshow(patch_d, cmap='gray')
+        # plt.title("Downscaled and normalized search patch")
 
-        # test crosscorrelation:
-        x,y = sol_xy[p, :]
-        x = int(x)//d_factor
-        y = int(y)//d_factor
-        wmp = wmap_flats[y, x, :].reshape(h_d, w_d)
+        # # test crosscorrelation:
+        # x,y = sol_xy[p, :]
+        # x = int(x)//d_factor
+        # y = int(y)//d_factor
+        # wmp = wmap_flats[y, x, :].reshape(h_d, w_d)
 
-        plt.figure()
-        plt.imshow(wmp, cmap='gray')
-        plt.title("Correct Solution world map patch")
+        # plt.figure()
+        # plt.imshow(wmp, cmap='gray')
+        # plt.title("Correct Solution world map patch")
 
-        plt.figure()
-        plt.imshow(wmp*patch_d, cmap='gray')
-        plt.title("Normalized cross-correlation")
+        # plt.figure()
+        # plt.imshow(wmp*patch_d, cmap='gray')
+        # plt.title("Normalized cross-correlation")
 
-        plt.show()
+        # plt.show()
 
         # computing the sum of square differences
         # R = np.sum(np.square(wmap_flats - patch_d.ravel()), axis=2)
         
         # calculating cross-correlation
         R = np.dot(wmap_flats, patch_d.ravel())/(h_d * w_d)
-
-        max_set = set()
-        for y in range(1,len(R)-1):
-            for x in range(1, len(R[0])-1):
-                if R[y,x] > 0.7 and R[y, x] > max(R[y - 1, x - 1],R[y - 1, x + 0],R[y - 1, x + 1],R[y + 0, x - 1],R[y + 0, x + 1],R[y + 1, x - 1],R[y + 1, x + 0],R[y + 1, x + 1]):
-                    max_set.add((x * d_factor,y * d_factor))
-                
-
-        # patch_d_flat = patch_d.ravel()
-        
-        # for y in range(m_d):
-        #     for x in range(n_d):
-        #         if (std == 0) and (wmap_sigmas[y,x] == 0):
-        #             R[y,x] = 1
-        #         elif (std * wmap_sigmas[y,x] == 0):
-        #             R[y,x] = 0
-        #         else:
-        #             R[y,x] = np.corrcoef(wmap_flats[y,x,:], patch_d_flat)[0,1]
-
 
         # idx = R.argmin()
         idx = R.argmax()
@@ -503,26 +227,16 @@ for i_in, in_path in enumerate(inputs[start:stop]):
         x = x_d * d_factor
         y = y_d * d_factor
 
+        print(x, y)
 
-        # wmap_patch_conv = signal.fftconvolve(wmap_norm, patch_norm)
-        # wmap_patch_xcorr = signal.correlate2d(wmap, patch)
-        # wmap_patch_corrcoef = corrcoefs2d(wmap_d, patch_d)
-        # wmap_patch_corrcoef = signal.correlate2d(wmap_d, patch_d)
-        # idx = wmap_patch_corrcoef.argmax()
-        # W_xcorr = len(wmap_patch_corrcoef[0])
-        # x = idx % W_xcorr
-        # y = idx // W_xcorr
-        # x *= d_factor
-        # y *= d_factor
+        # plt.figure()
+        # plt.imshow(wmap, cmap='gray')
+        # plt.plot(x, y, 'bo', ms='6')
+        # plt.title("WMAP")
 
-        plt.figure()
-        plt.imshow(wmap, cmap='gray')
-        plt.plot(x, y, 'bo', ms='6')
-        plt.title("WMAP")
-
-        plt.figure()
-        plt.imshow(patch, cmap='gray')
-        plt.title("Patch")
+        # plt.figure()
+        # plt.imshow(patch, cmap='gray')
+        # plt.title("Patch")
 
         # plt.figure()
         # plt.imshow(wmap_d, cmap='gray')
@@ -540,91 +254,11 @@ for i_in, in_path in enumerate(inputs[start:stop]):
         # plt.imshow(wmap_patch_xcorr, cmap='gray')
         # plt.title("Xcorr")
 
-        plt.figure()
-        plt.imshow(R, cmap='gray')
-        for x,y in max_set:
-            plt.plot(x/d_factor, y/d_factor, 'bo', ms='6')
-        plt.title("Corrcoef")
+        # plt.figure()
+        # plt.imshow(R, cmap='gray')
+        # plt.title("Corrcoef")
 
-        plt.show()
-        print()
-
-        # q00_hist, q01_hist, q10_hist, q11_hist = patch_preprocess(patch_d, h_d, w_d)
-
-        # # # matching
-        # max_R = 0
-        # for y in range(m_d):
-        #     for x in range(n_d):
-        #         # print("(x,y) = ({},{})".format(x,y))
-        #         R = corrcoef_hists(y, x, h_d, w_d, wmap_d_hists, q00_hist, q01_hist, q10_hist, q11_hist)
-        #         # print("Corr coef R =", R)
-        #         if R > max_R:
-        #             max_R = R
-        #             max_x_d = x
-        #             max_y_d = y
-
-        # # upscaling x,y
-        # max_x = max_x_d * d_factor
-        # max_y = max_y_d * d_factor
-        # print("(x,y) = ({},{})".format(max_x,max_y))
-        # print("Corr coef R =", max_R)
-
-        # if not all([x,y] == sol_xy[p,:]):
-        #     print("Wrong solution. Got {}, should be {}".format([x,y], sol_xy[p,:]))
-        
-
-        ##### BRAINSTORMING IDEAS----------------------------------------------------------------------------------------------------------
-
-        # x = int(sol_xy[p, 0])
-        # y = int(sol_xy[p, 1])
-
-        # print("(x,y):({},{})".format(x,y))
-
-       
-        # print("Comparing on solution patch:")
-        # print("Comparing the whole image")
-        # compare(wmap, y, x, h, w, patch, True)
-        # # subdivide the patch into 4 quadrants:
-        # # Q00
-        # # Q01
-        # # Q10
-        # # Q11
-        # q00 = patch[:h//2, :w//2]
-        # q01 = patch[:h//2, w//2:]
-        # q10 = patch[h//2:, :w//2]
-        # q11 = patch[h//2:, w//2:]
-        # print("Comparing Q00")
-        # compare(wmap, y     ,      x, h//2, w//2, q00, True)
-        # print("Comparing Q01")
-        # compare(wmap, y     , x+w//2, h//2, w//2, q01, True)
-        # print("Comparing Q10")
-        # compare(wmap, y+h//2, x     , h//2, w//2, q10, True)
-        # print("Comparing Q11")
-        # compare(wmap, y+h//2, x+w//2, h//2, w//2, q11, True)
-
-        # print()
-        # print("Comparing on patch (0, 0):")
-        # x, y = 0, 0
-        # print("Comparing the whole image")
-        # compare(wmap, y, x, h, w, patch, False)
-        # # subdivide the patch into 4 quadrants:
-        # # Q00
-        # # Q01
-        # # Q10
-        # # Q11
-        # q00 = patch[:h//2, :w//2]
-        # q01 = patch[:h//2, w//2:]
-        # q10 = patch[h//2:, :w//2]
-        # q11 = patch[h//2:, w//2:]
-        # print("Comparing Q00")
-        # compare(wmap, y     ,      x, h//2, w//2, q00, False)
-        # print("Comparing Q01")
-        # compare(wmap, y     , x+w//2, h//2, w//2, q01, False)
-        # print("Comparing Q10")
-        # compare(wmap, y+h//2, x     , h//2, w//2, q10, False)
-        # print("Comparing Q11")
-        # compare(wmap, y+h//2, x+w//2, h//2, w//2, q11, False)
-
+        # plt.show()
         print()
 
                 

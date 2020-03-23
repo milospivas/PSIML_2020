@@ -184,7 +184,7 @@ for i_in, in_path in enumerate(inputs[start:stop]):
         # plt.title("Downscaled search patch")
 
 
-        # patch normalization
+        # downscaled patch normalization
         mu = np.mean(patch_d)
         std = np.std(patch_d)
         if std != 0:
@@ -213,6 +213,7 @@ for i_in, in_path in enumerate(inputs[start:stop]):
 
         # plt.show()
 
+
         # computing the sum of square differences
         # R = np.sum(np.square(wmap_flats - patch_d.ravel()), axis=2)
         
@@ -224,9 +225,41 @@ for i_in, in_path in enumerate(inputs[start:stop]):
         R_w = len(R[0])
         x_d = idx % R_w
         y_d = idx // R_w
-        x = x_d * d_factor
-        y = y_d * d_factor
+        x_temp = x_d * d_factor
+        y_temp = y_d * d_factor
 
+        # now work on the big patch
+        patch_flat = patch.ravel() # flatten to 1D
+        # normalize:
+        patch_mu = np.mean(patch_flat)
+        patch_std = np.std(patch_flat)
+        if patch_std != 0:
+            patch_flat = (patch_flat - patch_mu) / patch_std
+        else:
+            patch_flat[:] = 0
+
+        # check all the surrounding positions:
+        R_max = -1
+        for y in (y_temp - 1, y_temp, y_temp+1):
+            for x in (x_temp - 1, x_temp, x_temp+1):
+                if y > 0 and x > 0 and y < H - h + 1 and x < W - w + 1:
+                    wmap_patch = wmap[y : y+h, x : x+w].ravel() # flatten
+                    # normalize:
+                    mu = np.mean(wmap_patch)
+                    std = np.std(wmap_patch)
+                    if std != 0:
+                        wmap_patch = (wmap_patch - mu) / std
+                    else:
+                        wmap_patch[:] = 0
+                    # compute correlation coefficient
+                    R_large = np.dot(patch_flat, wmap_patch) / (w*h)
+                    # print("corrcoef:", R_large)
+                    if R_large > R_max:
+                        R_max = R_large
+                        y_max = y
+                        x_max = x
+
+        y, x = y_max, x_max
         print(x, y)
 
         # plt.figure()
@@ -259,6 +292,6 @@ for i_in, in_path in enumerate(inputs[start:stop]):
         # plt.title("Corrcoef")
 
         # plt.show()
-        print()
+        print("", end="")
 
                 

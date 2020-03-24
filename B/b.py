@@ -402,7 +402,7 @@ def tpr_fpr(ca_yes : set, ca_no : set, wpa_yes : set, wpa_no : set) -> (float, f
     return TPR, FPR
 
 def eer_linear(ca_yes : set, ca_no : set, wpa : dict) -> float:
-    'Returns EER'
+    'Returns EER. Uses linear search.'
 
     min_diff = 42
     for temp in range(0, 201):
@@ -425,7 +425,7 @@ def eer_linear(ca_yes : set, ca_no : set, wpa : dict) -> float:
     return eer
 
 def eer_bs(ca_yes : set, ca_no : set, wpa : dict) -> float:
-    'Returns EER'
+    'Returns EER. Uses binary search.'
     left = 0
     right = 100
     min_diff = 42
@@ -447,6 +447,52 @@ def eer_bs(ca_yes : set, ca_no : set, wpa : dict) -> float:
             break
 
     return eer_fpr
+
+
+def cumulative_histogram(ca : set, wpa : dict) -> list:
+    'Returns a cumulative histogram of values in wpa whose keys are present in ca.'
+    hist = [0 for _ in range(101)]
+    
+    for i in ca:
+        if i in wpa:
+            hist[wpa[i]] += 1
+
+    for i in range(1, 101):
+        hist[i] += hist[i-1]
+
+    return hist
+
+
+def eer_cumul_hist_linear(ca_yes : set, ca_no : set, wpa : dict) -> float:
+    'Returns EER. Uses linear search with (cumulative) histograms.'
+    p_cumul_hist = cumulative_histogram(ca_yes, wpa)
+    n_cumul_hist = cumulative_histogram(ca_no, wpa)
+
+    T = 0
+    P = p_cumul_hist[-1]
+    TP = p_cumul_hist[-1]
+    TPR = 1
+
+    N = n_cumul_hist[-1]
+    FP = n_cumul_hist[-1]
+    FPR = 1
+    min_diff = diff = abs((TPR + FPR) - 1)
+
+    for T in range(1, 100):
+        TP = p_cumul_hist[-1] - p_cumul_hist[T-1]
+        FP = n_cumul_hist[-1] - n_cumul_hist[T-1]
+        TPR = TP/P
+        FPR = FP/N
+
+        diff = abs((TPR + FPR) - 1)
+        
+        if diff < min_diff:
+            min_diff = diff
+            eer_fpr = FPR
+
+    eer = eer_fpr
+    return eer
+
 
 def analyze_data(ca_yes : set, ca_no : set, wpa : dict):    #  -> (int, int, int, float, float, float):
     'Analyze the given data'
@@ -481,7 +527,8 @@ def analyze_data(ca_yes : set, ca_no : set, wpa : dict):    #  -> (int, int, int
 
     f = eer_bs(ca_yes, ca_no, wpa)
     f_linear = eer_linear(ca_yes, ca_no, wpa)
-    print("f vals:", round(f, 3), round(f_linear, 3))
+    f_cumul_hist = eer_cumul_hist_linear(ca_yes, ca_no, wpa)
+    print("f vals:", round(f, 3), round(f_linear, 3), round(f_cumul_hist, 3))
     print("", end="")
 
     return a, b, c, d, e, f

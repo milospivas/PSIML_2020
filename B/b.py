@@ -401,30 +401,28 @@ def tpr_fpr(ca_yes : set, ca_no : set, wpa_yes : set, wpa_no : set) -> (float, f
 
     return TPR, FPR
 
-# def eer_linear(ca_yes : set, ca_no : set, wpa : dict) -> float:
-#     'Returns EER'
+def eer_linear(ca_yes : set, ca_no : set, wpa : dict) -> float:
+    'Returns EER'
 
-#     min_diff = 42
-#     for T in range(0, 101):
-#         wpa_yes, wpa_no = wpa_map(wpa, T)
-#         tpr, fpr = tpr_fpr(ca_yes, ca_no, wpa_yes, wpa_no)
+    min_diff = 42
+    for temp in range(0, 201):
+        T = temp/2
+        wpa_yes, wpa_no = wpa_map(wpa, T)
+        tpr, fpr = tpr_fpr(ca_yes, ca_no, wpa_yes, wpa_no)
 
-#         diff = abs(tpr + fpr - 1)
-#         # print("For T={}, tpr, fpr = {}, {}, tpr+fpr = {}".format(T, tpr, fpr, tpr+fpr))
+        diff = abs(tpr + fpr - 1)
+        # print("For T={}, tpr, fpr = {}, {}, tpr+fpr = {}".format(T, tpr, fpr, tpr+fpr))
 
-#         if diff <= min_diff:
-#             min_diff = diff
-#             eer_fpr = fpr
-#         #     print("Less than or equal")
-#         # else:
-#         #     print("Greater than")
+        if diff <= min_diff:
+            min_diff = diff
+            eer_fpr = fpr
+        #     print("Less than or equal")
+        # else:
+        #     print("Greater than")
 
-#     if min_diff <= 0.01:
-#         eer = eer_fpr
-#     else:
-#         eer = 0
+    eer = eer_fpr
 
-#     return eer
+    return eer
 
 def eer_bs(ca_yes : set, ca_no : set, wpa : dict) -> float:
     'Returns EER'
@@ -482,6 +480,9 @@ def analyze_data(ca_yes : set, ca_no : set, wpa : dict):    #  -> (int, int, int
     d, e = tpr_fpr(ca_yes, ca_no, wpa_yes_70, wpa_no_70)
 
     f = eer_bs(ca_yes, ca_no, wpa)
+    f_linear = eer_linear(ca_yes, ca_no, wpa)
+    print("f vals:", round(f, 3), round(f_linear, 3))
+    print("", end="")
 
     return a, b, c, d, e, f
 
@@ -543,16 +544,26 @@ def print_data(ca_yes, ca_no, wpa, print_everything : bool = False) -> None:
 # if __name__ == "__main__":    # TODO uncomment, indent bellow
 # dir_path = input()    # TODO uncomment
 
-paths = [   "B/public/set/1"
-            ,"B/public/set/2"
-            ,"B/public/set/3"
-            ,"B/public/set/4"
-            ,"B/public/set/5"
-            ,"B/public/set/6"
-            ,"B/public/set/7"
-            ,"B/public/set/8"
-            ,"B/public/set/9"
-            ,"B/public/set/10"
+paths = [    "B/private/set/1"
+            ,"B/private/set/2"
+            ,"B/private/set/3"
+            ,"B/private/set/4"
+            ,"B/private/set/5"
+            ,"B/private/set/6"
+            ,"B/private/set/7"
+            ,"B/private/set/8"
+            ,"B/private/set/9"
+            ,"B/private/set/10"
+            # "B/public/set/1"
+            # ,"B/public/set/2"
+            # ,"B/public/set/3"
+            # ,"B/public/set/4"
+            # ,"B/public/set/5"
+            # ,"B/public/set/6"
+            # ,"B/public/set/7"
+            # ,"B/public/set/8"
+            # ,"B/public/set/9"
+            # ,"B/public/set/10"
         ]
 
 for dir_path in paths:

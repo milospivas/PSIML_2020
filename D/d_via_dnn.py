@@ -12,19 +12,12 @@
         Use a DNN to 'memorize' the worldmap i.e. to memorize each worlmap's patch
     Outline:
         - train a DNN with
-            inputs: the given public set patches - RGB images
-            labels: the given public set X,Y coordinate solutions - two nonnegative integers
+            inputs: the given test set patches - RGB images
+            labels: the given test set X,Y coordinate solutions - two nonnegative integers
 
             - input images aren't all the same dimensions
                 - try upscaling to largest / downscaling to smallest / rescaling to some other fixed size
-                    - no, this wouldn't work because patches match to patches of equal size on the worldmap
-                - use the smallest size from the public set to train a network
-                    - split the bigger patches into parts to augment the training set
-                    - when applied to matching on the bigger patches,
-                        - split the patch into smaller pieces
-                        - use the NN to compute the smaller pieces positions
-                        - and then fuse the positions into the position of the large patch
-                        
+
             - ReLU should be fine activation for all layers, including the outputs, since they are nonnegative numbers
 
             - start with 1 or 2 layers, upscale and optimize along the way
